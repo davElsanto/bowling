@@ -1,3 +1,5 @@
+package com.jobsity.test;
+
 import com.jobsity.utilities.FileReader;
 import org.junit.Test;
 import org.junit.Assert;
