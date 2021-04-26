@@ -27,6 +27,10 @@ public class BowlingGame {
             players.add(player);
         });
 
-        System.out.println(players);
+        for(Player player: players){
+            processUser.setTotalByUser(player.getPlayerScore());
+            processUser.getTotalByUser(player.getPlayerScore(), player.getPlayerName());
+        }
+
     }
 }

@@ -53,7 +53,7 @@ public class ProcessUserInformation {
                 //strike
                 this.addScoreToUser(0, 10, "strike", userScores);
             } else {
-                if (i + 1 < scores.size()) {
+                if (i < scores.size()) {
                     //numbers
                     int auxTotal = 0;
                     if (validations.isNumeric(scores.get(i)) && validations.isNumeric(scores.get(i + 1))) {
@@ -82,7 +82,7 @@ public class ProcessUserInformation {
     }
 
     public void addScoreToUser(int value1, int value2, String flag, ArrayList<Score> scoreUser) {
-        Score score = new Score(0, 0, false, false, false, false);
+        Score score = new Score(0, 0, false, false, false, false, 0);
         switch (flag) {
             case "strike":
                 score.setPinsValue2(10);
@@ -109,4 +109,116 @@ public class ProcessUserInformation {
 
     }
 
+    public void setTotalByUser(ArrayList<Score> userScore) {
+        int index = 0;
+        for (Score score : userScore) {
+            Score auxNext, auxNextNext, auxTemp;
+            int total = 0;
+            int totalPrev = index > 0 ? userScore.get(index - 1).getTotal() : 0;
+            if (index < 9) {
+                //strike #1
+                //totalPrev = index > 1 ? userScore.get(index - 1).getTotal() : 0;
+                auxTemp = userScore.get(index);
+                auxNext = this.getNext(index + 1, userScore);
+                auxNextNext = this.getNext(index + 2, userScore);
+                if (score.isStrike()) {
+
+                    //strike #2
+                    if (auxNext.isStrike()) {
+                        //strike #3
+                        if (auxNextNext.isStrike()) {
+                            auxTemp.setTotal(30 + totalPrev);
+
+                            //userScore.set(index, auxTemp);
+                        } else {
+                            auxTemp.setTotal(20 + auxNextNext.getPinsValue1() + totalPrev);
+
+
+                        }
+
+                    } else {
+                        auxTemp.setTotal(10 + auxNext.getPinsValue1() + auxNext.getPinsValue2() + totalPrev);
+
+                    }
+
+                } else if (score.isSpare()) {
+                    auxTemp.setTotal(10 + auxNext.getPinsValue1() + totalPrev);
+                } else {
+                    auxTemp.setTotal(auxTemp.getPinsValue1() + auxTemp.getPinsValue2() + totalPrev);
+                }
+
+                userScore.set(index, auxTemp);
+                index++;
+            } else {
+
+                auxTemp = userScore.get(index);
+                auxNext = this.getNext(index + 1, userScore);
+                auxNextNext = new Score(0,0,false,false,false,false,0);
+                try {
+                    auxNextNext = this.getNext(index + 2, userScore);
+                }catch (IndexOutOfBoundsException e){
+
+                }
+
+
+
+                auxTemp.setTotal(auxTemp.getPinsValue1() + auxTemp.getPinsValue2() +
+                        auxNext.getPinsValue1() + auxNext.getPinsValue2() +
+                        auxNextNext.getPinsValue1() + auxNextNext.getPinsValue2() +
+                        totalPrev);
+                userScore.set(index, auxTemp);
+
+                break;
+
+
+            }
+
+
+        }
+    }
+
+    public Score getNext(int index, ArrayList<Score> userScore) {
+        return userScore.get(index);
+    }
+
+    public void getTotalByUser(ArrayList<Score> userScore, String name){
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Frame\t\t");
+
+        for(int i = 1; i < 11; i++){
+            sb.append(i + "\t\t");
+        }
+        sb.append("\n"+ name + "\n");
+        sb.append("Pinfalls" + "\t");
+        for(int i = 0; i < 10; i++){
+            if(userScore.get(i).isStrike()){
+                sb.append(" \tX\t");
+            }else if(userScore.get(i).isSpare()){
+                sb.append(userScore.get(i).getPinsValue1() + "\t/\t");
+            }else if(userScore.get(i).isOpen()){
+                if(userScore.get(i).getPinsValue1() == 0){
+                    sb.append("-\t" + userScore.get(i).getPinsValue2()+ "\t");
+                }else{
+                    sb.append(userScore.get(i).getPinsValue1() + "\t-\t");
+                }
+            }else{
+                if(userScore.get(i).getPinsValue1() == 0){
+                    sb.append("F\t" + userScore.get(i).getPinsValue2()+ "\t");
+                }else{
+                    sb.append(userScore.get(i).getPinsValue1() + "\tF\t");
+                }
+            }
+
+        }
+        sb.append("\n");
+        sb.append("Score" + "\t\t");
+        for(int i = 0; i < 10; i++){
+            sb.append(userScore.get(i).getTotal() + "\t\t");
+        }
+        sb.append("\n");
+
+        System.out.println(sb.toString());
+
+    }
 }
