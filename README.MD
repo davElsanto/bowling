@@ -88,3 +88,44 @@ Pinfalls	 	X	 	X	 	X	 	X	 	X	 	X	 	X	 	X	 	X	 	X
 Score		30		60		90		120		150		180		210		240		270		300		
 
 </pre>
+
+### Example: Worst Game
+
+#### Input
+
+<pre>
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+John    0
+</pre>
+
+#### Output
+
+<pre>
+Frame		1		2		3		4		5		6		7		8		9		10		
+John
+Pinfalls	-	0	-	0	-	0	-	0	-	0	-	0	-	0	-	0	-	0	-	0	
+Score		0		0		0		0		0		0		0		0		0		0		
+
+</pre>
