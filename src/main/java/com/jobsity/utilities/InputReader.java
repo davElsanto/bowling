@@ -5,6 +5,9 @@ import java.util.Scanner;
 
 public class InputReader {
 
+    public InputReader() {
+    }
+
     public ArrayList<String> processUserInput(){
 
         Scanner scanner = new Scanner(System.in);

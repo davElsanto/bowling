@@ -10,7 +10,7 @@ import java.util.LinkedHashMap;
 public class ProcessUserInformationTest {
 
     @Test
-    public void canGenerateUsersAndScores(){
+    public void testGenerateUsersAndScores(){
         ProcessUserInformation pui = new ProcessUserInformation();
         ArrayList<String> userData = new ArrayList<>();
         userData.add("user1  1");

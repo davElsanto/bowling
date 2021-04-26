@@ -29,4 +29,12 @@ public class Player {
     public void setPlayerScore(ArrayList<Score> playerScore) {
         this.playerScore = playerScore;
     }
+
+    @Override
+    public String toString() {
+        return "Player{" +
+                "playerName='" + playerName + '\'' +
+                ", playerScore=" + playerScore.toString() +
+                '}';
+    }
 }

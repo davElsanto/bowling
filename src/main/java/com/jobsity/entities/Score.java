@@ -68,4 +68,16 @@ public class Score {
     public void setSpare(boolean spare) {
         isSpare = spare;
     }
+
+    @Override
+    public String toString() {
+        return "Score{" +
+                "pinsValue1=" + pinsValue1 +
+                ", pinsValue2=" + pinsValue2 +
+                ", isStrike=" + isStrike +
+                ", isSpare=" + isSpare +
+                ", isFoul=" + isFoul +
+                ", isOpen=" + isOpen +
+                '}';
+    }
 }
