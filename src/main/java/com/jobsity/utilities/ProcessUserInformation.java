@@ -1,29 +1,33 @@
 package com.jobsity.utilities;
 
 import com.jobsity.entities.Score;
+import com.jobsity.enums.Bowling;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.ListIterator;
 
 public class ProcessUserInformation {
 
     Validations validations = new Validations();
 
     public LinkedHashMap<String, ArrayList<String>> generateUsersAndScores(ArrayList<String> userData) {
+
         LinkedHashMap<String, ArrayList<String>> data = new LinkedHashMap<>();
 
-        String[] lineText = new String[2];
+        String[] lineText;
         String userName;
         String userScore;
 
         for (String line : userData) {
+
             lineText = line
                     .replaceAll("\\s+", " ")
                     .split(" ");
+
             userName = lineText[0];
-            userScore = lineText[1];
+            userScore = validations.validateInput(lineText[1]) ?
+                    lineText[1] :
+                    String.valueOf(Bowling.ERROR_SCORE);
 
             ArrayList<String> values = new ArrayList<>();
 
@@ -43,37 +47,37 @@ public class ProcessUserInformation {
 
     public ArrayList<Score> generateScore(ArrayList<String> scores) {
 
-        StringBuilder sb = new StringBuilder();
-
         ArrayList<Score> userScores = new ArrayList<>();
 
-        for (int i = 0; i < scores.size(); i++) {
+        for (int index = 0; index < scores.size(); index++) {
 
-            if (scores.get(i).equals("10")) {
+            if (scores.get(index).equals("10")) {
                 //strike
                 this.addScoreToUser(0, 10, "strike", userScores);
             } else {
-                if (i < scores.size()) {
-                    //numbers
-                    int auxTotal = 0;
-                    if (validations.isNumeric(scores.get(i)) && validations.isNumeric(scores.get(i + 1))) {
-                        auxTotal = Integer.parseInt(scores.get(i)) + Integer.parseInt(scores.get(i + 1));
-                        if (auxTotal == 10) {
-                            //spare
-                            this.addScoreToUser(Integer.parseInt(scores.get(i)), Integer.parseInt(scores.get(i + 1)), "spare", userScores);
-                        } else {
-                            //open
-                            this.addScoreToUser(Integer.parseInt(scores.get(i)), Integer.parseInt(scores.get(i + 1)), "open", userScores);
-                        }
-                    } else {
-                        //es foul
-                        if (!validations.isNumeric(scores.get(i))) {
-                            this.addScoreToUser(0, Integer.parseInt(scores.get(i + 1)), "foul", userScores);
-                        } else {
-                            this.addScoreToUser(Integer.parseInt(scores.get(i)), 0, "foul", userScores);
-                        }
-                    }
-                    i++;
+                if (index < scores.size()) {
+
+                    boolean isNumberValue = validations.isNumeric(scores.get(index));
+                    boolean isNumberValueNext = index + 1 >= scores.size() ?
+                            false :
+                            validations.isNumeric(scores.get(index + 1));
+
+                    int auxUserScore = isNumberValue ?
+                            Integer.parseInt(scores.get(index)) : 0;
+                    int auxUserScoreNext = isNumberValueNext ?
+                            Integer.parseInt(scores.get(index + 1)) : 0;
+
+                    String flag;
+
+                    if (isNumberValue && isNumberValueNext)
+                        if (auxUserScore + auxUserScoreNext == 10) flag = "spare";
+                        else flag = "open";
+                    else flag = !isNumberValueNext ? "open" : "foul";
+
+                    this.addScoreToUser(auxUserScore, auxUserScoreNext, flag, userScores);
+
+                    index++;
+
                 }
             }
         }
@@ -111,61 +115,56 @@ public class ProcessUserInformation {
 
     public void setTotalByUser(ArrayList<Score> userScore) {
         int index = 0;
+
+        if (!validations.hasEnoughEntries(userScore))
+            this.addScoresEmptyEntries(userScore);
+
         for (Score score : userScore) {
+
             Score auxNext, auxNextNext, auxTemp;
-            int total = 0;
+            int total;
             int totalPrev = index > 0 ? userScore.get(index - 1).getTotal() : 0;
             if (index < 9) {
                 //strike #1
-                //totalPrev = index > 1 ? userScore.get(index - 1).getTotal() : 0;
                 auxTemp = userScore.get(index);
                 auxNext = this.getNext(index + 1, userScore);
                 auxNextNext = this.getNext(index + 2, userScore);
+
                 if (score.isStrike()) {
 
                     //strike #2
                     if (auxNext.isStrike()) {
                         //strike #3
-                        if (auxNextNext.isStrike()) {
-                            auxTemp.setTotal(30 + totalPrev);
+                        if (auxNextNext.isStrike()) total = Bowling.STRIKE_3 + totalPrev;
+                        else total = Bowling.STRIKE_2 + auxNextNext.getPinsValue1() + totalPrev;
 
-                            //userScore.set(index, auxTemp);
-                        } else {
-                            auxTemp.setTotal(20 + auxNextNext.getPinsValue1() + totalPrev);
-
-
-                        }
-
-                    } else {
-                        auxTemp.setTotal(10 + auxNext.getPinsValue1() + auxNext.getPinsValue2() + totalPrev);
-
-                    }
+                    } else total = Bowling.STRIKE_1 + auxNext.getPinsValue1() + auxNext.getPinsValue2() + totalPrev;
 
                 } else if (score.isSpare()) {
-                    auxTemp.setTotal(10 + auxNext.getPinsValue1() + totalPrev);
+                    total = Bowling.STRIKE_1 + auxNext.getPinsValue1() + totalPrev;
                 } else {
-                    auxTemp.setTotal(auxTemp.getPinsValue1() + auxTemp.getPinsValue2() + totalPrev);
+                    total = auxTemp.getPinsValue1() + auxTemp.getPinsValue2() + totalPrev;
                 }
 
+                auxTemp.setTotal(total);
                 userScore.set(index, auxTemp);
                 index++;
-            } else {
 
+            } else {
+                //get last values, manually
                 auxTemp = userScore.get(index);
                 auxNext = this.getNext(index + 1, userScore);
-                auxNextNext = new Score(0,0,false,false,false,false,0);
-                try {
+                auxNextNext = new Score(0, 0, false, false, false, false, 0);
+
+                if (userScore.size() == 12)
                     auxNextNext = this.getNext(index + 2, userScore);
-                }catch (IndexOutOfBoundsException e){
 
-                }
-
-
-
-                auxTemp.setTotal(auxTemp.getPinsValue1() + auxTemp.getPinsValue2() +
+                auxTemp.setTotal(
+                        auxTemp.getPinsValue1() + auxTemp.getPinsValue2() +
                         auxNext.getPinsValue1() + auxNext.getPinsValue2() +
                         auxNextNext.getPinsValue1() + auxNextNext.getPinsValue2() +
                         totalPrev);
+
                 userScore.set(index, auxTemp);
 
                 break;
@@ -177,45 +176,54 @@ public class ProcessUserInformation {
         }
     }
 
+    public void addScoresEmptyEntries(ArrayList<Score> userScore) {
+        Score score = new Score(0, 0, false, false, false, true, 0);
+        while (userScore.size() < 11) userScore.add(score);
+    }
+
     public Score getNext(int index, ArrayList<Score> userScore) {
         return userScore.get(index);
     }
 
-    public void getTotalByUser(ArrayList<Score> userScore, String name){
+    public void getTotalByUser(ArrayList<Score> userScore, String name) {
+
         StringBuilder sb = new StringBuilder();
 
         sb.append("Frame\t\t");
 
-        for(int i = 1; i < 11; i++){
+        for (int i = 1; i < 11; i++)
             sb.append(i + "\t\t");
-        }
-        sb.append("\n"+ name + "\n");
-        sb.append("Pinfalls" + "\t");
-        for(int i = 0; i < 10; i++){
-            if(userScore.get(i).isStrike()){
-                sb.append(" \tX\t");
-            }else if(userScore.get(i).isSpare()){
-                sb.append(userScore.get(i).getPinsValue1() + "\t/\t");
-            }else if(userScore.get(i).isOpen()){
-                if(userScore.get(i).getPinsValue1() == 0){
-                    sb.append("-\t" + userScore.get(i).getPinsValue2()+ "\t");
-                }else{
-                    sb.append(userScore.get(i).getPinsValue1() + "\t-\t");
-                }
-            }else{
-                if(userScore.get(i).getPinsValue1() == 0){
-                    sb.append("F\t" + userScore.get(i).getPinsValue2()+ "\t");
-                }else{
-                    sb.append(userScore.get(i).getPinsValue1() + "\tF\t");
-                }
+
+        sb.append("\n" + name + "\nPinfalls" + "\t");
+
+        for (int i = 0; i < userScore.size(); i++) {
+
+            int pinsValue1 = userScore.get(i).getPinsValue1();
+            int pinsValue2 = userScore.get(i).getPinsValue2();
+
+            if (userScore.get(i).isStrike()) sb.append(" \tX\t");
+            else if (userScore.get(i).isSpare()) sb.append(pinsValue1 + "\t/\t");
+            else if (userScore.get(i).isOpen()) {
+
+                if (pinsValue1 == 0) sb.append("-\t" + pinsValue2 + "\t");
+                else if (pinsValue2 == 0) sb.append(pinsValue1 + "\t-\t");
+                else sb.append(pinsValue1 + "\t" + pinsValue2 + "\t");
+
+            } else {
+
+                if (pinsValue1 == 0) sb.append("F\t" + pinsValue2 + "\t");
+                else sb.append(pinsValue1 + "\tF\t");
+
             }
 
         }
-        sb.append("\n");
-        sb.append("Score" + "\t\t");
-        for(int i = 0; i < 10; i++){
+
+        sb.append("\n").append("Score" + "\t\t");
+
+        for (int i = 0; i < 10; i++) {
             sb.append(userScore.get(i).getTotal() + "\t\t");
         }
+
         sb.append("\n");
 
         System.out.println(sb.toString());
